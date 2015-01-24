@@ -1,5 +1,8 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
+using UnityEngine.UI;
+
 
 public class RopecabezaManagger : MonoBehaviour 
 {
@@ -9,51 +12,94 @@ public class RopecabezaManagger : MonoBehaviour
     public float Radio = 0.5f;
     public float SpeedRotation = 10.0f;
     public float angleMaxMin = 5.0f;
+    public float RadioRandoPiezaFaltante = 25.0f;
+    public float TimeRestarMap = 0.6f;
+    public int TotalRopecabesas = 10;
+    public string texto = "<b>{0}</b> de <b>{1}</b> rompecabesas restatnes";
+    public Text UiText;
+    public string NameSceneEndGame = "Menu";
 
     //! Private
     private Vector2 PiezaSize = Vector2.zero;
     private int indexPiezaFaltante = 0;
     private GameObject GameObjectPiezaFaltante;
     private bool Rotation = false;
+    private List<GameObject> objects = new List<GameObject>();
+    private int intentos = 0;
+
+    void Awake()
+    {
+    //    DontDestroyOnLoad(this);
+    }
 
 	void Start () 
     {
-        if (Sprites.Length > 0)        
+        initialize();
+	}
+
+    private void initialize()
+    {
+        UiText.text = string.Format(texto, intentos.ToString(), TotalRopecabesas.ToString());
+
+        if (Sprites.Length > 0)
             PiezaSize = Sprites[0].bounds.size;
 
         // Selecciono la pieza faltante
         indexPiezaFaltante = Random.Range(0, (int)(Piezas.x * Piezas.y - 1));
- 
-        // Instance Piezas
+
+        // Agrega las piezas en el tablero
         int index = 0;
         for (int row = 0; row < Piezas.x; row++)
         {
             for (int col = 0; col < Piezas.y; col++)
             {
-               
                 GameObject pieza = new GameObject("Pieza " + index.ToString());
                 pieza.transform.position = gameObject.transform.position +
                     new Vector3(col * PiezaSize.x, row * PiezaSize.y * -1);
 
                 pieza.transform.parent = gameObject.transform;
-               
-                if(index != indexPiezaFaltante)
-                {                
+
+                if (index != indexPiezaFaltante)
+                {
                     SpriteRenderer spriteRender = pieza.AddComponent<SpriteRenderer>();
                     spriteRender.sprite = Sprites[index];
                     spriteRender.sortingOrder = 0;
                 }
-                else  GameObjectPiezaFaltante = pieza;               
-                
+                else GameObjectPiezaFaltante = pieza;
+
+                objects.Add(pieza);
                 index++;
             }
         }
 
+        // Random Position Pieza faltante
+        float angle = Random.Range(0, 2 * Mathf.PI);
+        PiezaFaltante.transform.position = new Vector3(Mathf.Cos(angle), Mathf.Sin(angle), 0.0f) * RadioRandoPiezaFaltante;
+
         SpriteRenderer spritePiezaFaltante = PiezaFaltante.GetComponent<SpriteRenderer>();
         spritePiezaFaltante.sprite = Sprites[indexPiezaFaltante];
         spritePiezaFaltante.sortingOrder = 1;
-        PiezaFaltante.AddComponent<BoxCollider2D>();        
-	}
+
+        if(!PiezaFaltante.GetComponent<BoxCollider2D>())
+            PiezaFaltante.AddComponent<BoxCollider2D>();  
+    }
+
+    private void clean()
+    {
+        for (int i = 0; i < objects.Count; i++)
+            DestroyImmediate(objects[i]);
+
+        PiezaFaltante.GetComponent<DragAndDrop>().enabled = true;
+    }
+
+    public void restart()
+    {
+        if (intentos >= TotalRopecabesas)
+            Application.LoadLevel(NameSceneEndGame);
+
+        clean();
+        initialize();
+    }
 
     public void OnMove()
     {
@@ -82,7 +128,10 @@ public class RopecabezaManagger : MonoBehaviour
         {
             PiezaFaltante.GetComponent<DragAndDrop>().enabled = false;
             PiezaFaltante.transform.position = GameObjectPiezaFaltante.transform.position;
-            PiezaFaltante.transform.rotation = GameObjectPiezaFaltante.transform.rotation;             
+            PiezaFaltante.transform.rotation = GameObjectPiezaFaltante.transform.rotation;
+            
+            intentos++;
+            Invoke("restart", TimeRestarMap);         
         }
     }
 }
