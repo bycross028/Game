@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
-using UnityEngine.UI;
+//using UnityEngine.UI;
 
 
 public class RopecabezaManagger : MonoBehaviour 
@@ -16,7 +16,7 @@ public class RopecabezaManagger : MonoBehaviour
     public float TimeRestarMap = 0.6f;
     public int TotalRopecabesas = 10;
     public string texto = "<b>{0}</b> de <b>{1}</b> rompecabesas restatnes";
-    public Text UiText;
+    public GUIText UiText;
     public string NameSceneEndGame = "Menu";
 
     //! Private
