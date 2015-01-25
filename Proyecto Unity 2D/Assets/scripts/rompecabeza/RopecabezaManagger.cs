@@ -15,11 +15,13 @@ public class RopecabezaManagger : MonoBehaviour
     public float RadioRandoPiezaFaltante = 25.0f;
     public float TimeRestarMap = 0.6f;
     public int TotalRopecabesas = 10;
-    public string texto = "<b>{0}</b> de <b>{1}</b> rompecabesas restatnes";
+    public Cronometro cronometro;
+    public string texto = "<b>{0}</b> rompecabesas resueltos";
     public GUIText UiText;
     public string NameSceneEndGame = "Menu";
 
     //! Private
+    private Vector3 ScreeSizeWolrlPoint = Vector3.zero;
     private Vector2 PiezaSize = Vector2.zero;
     private int indexPiezaFaltante = 0;
     private GameObject GameObjectPiezaFaltante;
@@ -27,19 +29,24 @@ public class RopecabezaManagger : MonoBehaviour
     private List<GameObject> objects = new List<GameObject>();
     private int intentos = 0;
 
-    void Awake()
+	void Start ()
     {
-    //    DontDestroyOnLoad(this);
-    }
+        ScreeSizeWolrlPoint = Camera.main.ScreenToWorldPoint(new Vector3(Screen.width, Screen.height));
 
-	void Start () 
-    {
+        // Configurate Cronometro
+        cronometro.eventComplete += new Cronometro.EventHandler(timeOut); 
         initialize();
 	}
 
+    private void timeOut() 
+    {
+        cronometro.StartTimer();
+        Application.LoadLevel(NameSceneEndGame);
+    }
+
     private void initialize()
     {
-        UiText.text = string.Format(texto, intentos.ToString(), TotalRopecabesas.ToString());
+        UiText.text = string.Format(texto, intentos.ToString());
 
         if (Sprites.Length > 0)
             PiezaSize = Sprites[0].bounds.size;
@@ -74,7 +81,25 @@ public class RopecabezaManagger : MonoBehaviour
 
         // Random Position Pieza faltante
         float angle = Random.Range(0, 2 * Mathf.PI);
-        PiezaFaltante.transform.position = new Vector3(Mathf.Cos(angle), Mathf.Sin(angle), 0.0f) * RadioRandoPiezaFaltante;
+        PiezaFaltante.transform.position = new Vector3(Mathf.Sin(angle), Mathf.Cos(angle), 0.0f) * RadioRandoPiezaFaltante;
+
+        // Limites del drag and Drop
+        if (ScreeSizeWolrlPoint.y < PiezaFaltante.transform.position.y + PiezaSize.y * 0.5f)
+            PiezaFaltante.transform.position = new Vector3(PiezaFaltante.transform.position.x,
+                                                        ScreeSizeWolrlPoint.y - PiezaSize.y * 0.5f,
+                                                        PiezaFaltante.transform.position.z);
+        if (ScreeSizeWolrlPoint.x < PiezaFaltante.transform.position.x + PiezaSize.x * 0.5f)
+            PiezaFaltante.transform.position = new Vector3(ScreeSizeWolrlPoint.x - PiezaSize.x * 0.5f,
+                                                        PiezaFaltante.transform.position.y,
+                                                        PiezaFaltante.transform.position.z);
+        if (-ScreeSizeWolrlPoint.y > PiezaFaltante.transform.position.y - PiezaSize.y * 0.5f)
+            PiezaFaltante.transform.position = new Vector3(PiezaFaltante.transform.position.x,
+                                                        -ScreeSizeWolrlPoint.y + PiezaSize.y * 0.5f,
+                                                        PiezaFaltante.transform.position.z);
+        if (-ScreeSizeWolrlPoint.x > PiezaFaltante.transform.position.x - PiezaSize.x * 0.5f)
+            PiezaFaltante.transform.position = new Vector3(-ScreeSizeWolrlPoint.x + PiezaSize.x * 0.5f,
+                                                        PiezaFaltante.transform.position.y,
+                                                        PiezaFaltante.transform.position.z);
 
         SpriteRenderer spritePiezaFaltante = PiezaFaltante.GetComponent<SpriteRenderer>();
         spritePiezaFaltante.sprite = Sprites[indexPiezaFaltante];
@@ -94,9 +119,6 @@ public class RopecabezaManagger : MonoBehaviour
 
     public void restart()
     {
-        if (intentos >= TotalRopecabesas)
-            Application.LoadLevel(NameSceneEndGame);
-
         clean();
         initialize();
     }

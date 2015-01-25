@@ -8,6 +8,7 @@ public class MemoryGameMannager : MonoBehaviour
     public Sprite SpriteBack;
     public Sprite[] Sprites;
     public GameObject CartaPrefab;
+    public Cronometro cronometro;
     public float TiempoEsperaInicio = 3.0f;
     public float RetardoEfecto = 0.05f;
     public float TimpoEsperaResolver = 0.5f;
@@ -44,7 +45,10 @@ public class MemoryGameMannager : MonoBehaviour
         Shuffle(ids);
         ids.RemoveRange(maxNumber, ids.Count - maxNumber);
         ids.AddRange(ids.GetRange(0, ids.Count));
-        Shuffle(ids);    
+        Shuffle(ids);
+
+        Invoke("start", TiempoEsperaInicio + (Piezas.x * Piezas.y) * RetardoEfecto);
+
 
         int index = 0;
         for (int row = 0; row < Piezas.x; row++)
@@ -85,8 +89,7 @@ public class MemoryGameMannager : MonoBehaviour
             Invoke("loadLevel", TimpoScalingCarta);
             total = 0;
         }
-    }
-		
+    }		
         
     public void loadLevel()  
     {
@@ -122,6 +125,11 @@ public class MemoryGameMannager : MonoBehaviour
         }
 
         cartSelected.Clear();  
+    }
+
+    public void start()
+    {
+        cronometro.StartTimer();
     }
 
     void Shuffle<T>(List<T> array)
